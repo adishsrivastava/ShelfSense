@@ -1,5 +1,5 @@
 """
-Retail Shelf Vision Pipeline: IoU Computation & Planogram Horizontal Sweep Stockout Detector.
+Real-Time Image Patch & Planogram Stockout Detector (NumPy Tensor Vision Engine)
 """
 import numpy as np
 
@@ -10,6 +10,46 @@ def compute_iou(boxA, boxB) -> float:
     areaA = max(0.0, boxA[2] - boxA[0]) * max(0.0, boxA[3] - boxA[1])
     areaB = max(0.0, boxB[2] - boxB[0]) * max(0.0, boxB[3] - boxB[1])
     return float(inter / (areaA + areaB - inter + 1e-8))
+
+def analyze_uploaded_shelf_patches(patches: list, conf_threshold: float = 0.55, gap_threshold_px: float = 45.0):
+    W1 = np.array([
+        [ 1.65, -1.20,  0.85, -1.40],
+        [ 0.90, -0.75,  1.10, -0.60],
+        [ 1.50, -1.35,  0.95, -1.10],
+        [-1.70,  1.80, -1.25,  1.55],
+        [ 1.20, -0.95,  0.80, -0.90],
+        [ 0.70, -0.50,  0.65, -0.45],
+        [ 1.35, -1.10,  1.05, -0.85],
+        [ 1.45, -1.25,  0.90, -1.15]
+    ])
+    b1 = np.array([-0.35, 0.25, -0.20, 0.30])
+    W2 = np.array([[1.85], [-1.95], [1.40], [-1.60]])
+    b2 = np.array([-0.15])
+
+    sku_boxes, stockout_boxes = [], []
+    for p in patches:
+        feats = np.array(p["features"], dtype=float)
+        z1 = feats @ W1 + b1
+        a1 = 1.0 / (1.0 + np.exp(-np.clip(z1, -30, 30)))
+        z2 = float((a1 @ W2 + b2)[0])
+        sku_prob = float(1.0 / (1.0 + np.exp(-np.clip(z2, -30, 30))))
+        stockout_prob = 1.0 - sku_prob
+
+        if sku_prob >= conf_threshold:
+            sku_boxes.append({
+                "row": p["row"],
+                "box": [p["x"], p["y"], p["x"] + p["w"], p["y"] + p["h"]],
+                "confidence": round(sku_prob, 3),
+                "label": p.get("sku_hint", "Product SKU")
+            })
+        elif stockout_prob >= conf_threshold and p["w"] >= gap_threshold_px * 0.5:
+            stockout_boxes.append({
+                "row": p["row"],
+                "box": [p["x"], p["y"], p["x"] + p["w"], p["y"] + p["h"]],
+                "confidence": round(stockout_prob, 3),
+                "severity": "CRITICAL" if stockout_prob > 0.78 else "MODERATE"
+            })
+    return {"sku_detections": sku_boxes, "stockout_gaps": stockout_boxes}
 
 def detect_shelf_stockouts(detected_boxes, shelf_rows, gap_threshold_px=55.0):
     stockout_zones = []

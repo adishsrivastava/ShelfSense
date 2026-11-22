@@ -1,19 +1,20 @@
 """
-ShelfSense AI — FastAPI Serverless Backend
+ShelfSense AI — FastAPI Serverless Backend with Live Image Patch Tensor Analysis
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Any
 import numpy as np
 import sys, os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.core.mlp import ShelfMLP
 from src.core.tensor_ops import run_tensor_diagnostics, svd_feature_compression, verify_gradients
+from src.vision.detector import analyze_uploaded_shelf_patches
 from src.forecasting.sequence_models import DemandForecastLSTM, match_sku_attention
 
-app = FastAPI(title="ShelfSense AI API", version="2.0.0")
+app = FastAPI(title="ShelfSense AI API", version="2.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 class TrainRequest(BaseModel):
@@ -26,9 +27,18 @@ class ForecastRequest(BaseModel):
     history: List[float] = [48, 44, 39, 35, 29, 24, 18, 14]
     horizon: int = 6
 
+class ImagePatchRequest(BaseModel):
+    patches: List[Dict[str, Any]]
+    conf_threshold: float = 0.55
+    gap_threshold_px: float = 50.0
+
 @app.get("/api/health")
 def health():
-    return {"status": "online", "service": "ShelfSense AI", "seed": 42}
+    return {"status": "online", "service": "ShelfSense AI", "live_image_pipeline": True, "seed": 42}
+
+@app.post("/api/analyze-image")
+def analyze_image_endpoint(req: ImagePatchRequest):
+    return analyze_uploaded_shelf_patches(req.patches, req.conf_threshold, req.gap_threshold_px)
 
 @app.post("/api/train-mlp")
 def train_mlp_endpoint(req: TrainRequest):

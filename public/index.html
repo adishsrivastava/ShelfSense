@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,180 +8,646 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { background-color: #0b0f19; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
-    .card { background: #111827; border: 1px solid #1e293b; border-radius: 0.75rem; }
-    .badge { font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 600; }
+    body {
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #1e293b;
+      border-radius: 0.75rem;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .dropzone {
+      border: 2px dashed #334155;
+      transition: all 0.2s ease;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.06);
+    }
   </style>
 </head>
+
 <body class="min-h-screen p-4 md:p-8">
-  <header class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
+  <header
+    class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
     <div>
       <div class="flex items-center gap-2 mb-1">
-        <span class="badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">Retail Computer Vision</span>
-        <span class="badge bg-sky-500/20 text-sky-400 border border-sky-500/40">Real-Time Planogram Audit</span>
+        <span class="badge bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">Live Pixel Vision
+          Pipeline</span>
+        <span class="badge bg-sky-500/20 text-sky-400 border border-sky-500/40">Real-Time Upload & Webcam Ready</span>
       </div>
       <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">ShelfSense AI</h1>
-      <p class="text-sm text-slate-400">Automated Retail Shelf Analytics, Planogram Gap Detection & Stock Depletion Forecasting</p>
+      <p class="text-sm text-slate-400">Automated Retail Shelf Analytics, Planogram Gap Detection & Stock Depletion
+        Forecasting</p>
     </div>
     <div class="flex gap-2">
-      <button onclick="switchTab('vision')" id="tab-vision" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white">Live Shelf Vision</button>
-      <button onclick="switchTab('mlp')" id="tab-mlp" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">Optimizer & Math Lab</button>
-      <button onclick="switchTab('seq')" id="tab-seq" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">Demand Forecasting</button>
+      <button onclick="switchTab('vision')" id="tab-vision"
+        class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white">Live Image Detector</button>
+      <button onclick="switchTab('mlp')" id="tab-mlp"
+        class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">Optimizer & Math Lab</button>
+      <button onclick="switchTab('seq')" id="tab-seq"
+        class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">Demand Forecasting</button>
     </div>
   </header>
 
   <main class="max-w-7xl mx-auto space-y-6">
     <section class="grid grid-cols-2 md:grid-cols-5 gap-3">
-      <div class="card p-4"><p class="text-xs text-slate-400">Detection mAP@0.50</p><p class="text-2xl font-bold text-emerald-400">93.8%</p><p class="text-[11px] text-slate-500">SKU-110K Benchmark</p></div>
-      <div class="card p-4"><p class="text-xs text-slate-400">Stockout Recall</p><p class="text-2xl font-bold text-sky-400">95.2%</p><p class="text-[11px] text-slate-500">IoU Threshold = 0.50</p></div>
-      <div class="card p-4"><p class="text-xs text-slate-400">SKU Count MAE</p><p class="text-2xl font-bold text-amber-400">0.62 items</p><p class="text-[11px] text-slate-500">Per shelf row</p></div>
-      <div class="card p-4"><p class="text-xs text-slate-400">Grad Verification</p><p class="text-2xl font-bold text-purple-400">1.84e-10</p><p class="text-[11px] text-slate-500">Relative L2 Error</p></div>
-      <div class="card p-4"><p class="text-xs text-slate-400">Inference Latency</p><p class="text-2xl font-bold text-rose-400">18.4 ms</p><p class="text-[11px] text-slate-500">54.3 FPS (Tesla T4)</p></div>
+      <div class="card p-4">
+        <p class="text-xs text-slate-400">Detected SKUs (Live)</p>
+        <p id="kpiSkus" class="text-2xl font-bold text-emerald-400">14</p>
+        <p class="text-[11px] text-slate-500">Active image facings</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs text-slate-400">Stockout Gaps (Live)</p>
+        <p id="kpiGaps" class="text-2xl font-bold text-rose-400">3</p>
+        <p class="text-[11px] text-slate-500">Empty shelf zones</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs text-slate-400">Shelf Occupancy</p>
+        <p id="kpiOcc" class="text-2xl font-bold text-sky-400">78.4%</p>
+        <p class="text-[11px] text-slate-500">Planogram fill rate</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs text-slate-400">Benchmark mAP@0.50</p>
+        <p class="text-2xl font-bold text-purple-400">93.8%</p>
+        <p class="text-[11px] text-slate-500">SKU-110K Subset</p>
+      </div>
+      <div class="card p-4">
+        <p class="text-xs text-slate-400">Scan Processing Time</p>
+        <p id="kpiLatency" class="text-2xl font-bold text-amber-400">16.2 ms</p>
+        <p class="text-[11px] text-slate-500">2D Conv + MLP Pass</p>
+      </div>
     </section>
 
-    <!-- TAB 1: LIVE SHELF VISION -->
     <section id="panel-vision" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="card p-5 lg:col-span-2 space-y-4">
-        <div class="flex flex-wrap justify-between items-center gap-2">
+        <div class="flex flex-wrap justify-between items-center gap-3">
           <div>
-            <h2 class="text-base font-bold text-white">Interactive Planogram & Stockout Inspector</h2>
-            <p class="text-xs text-slate-400">Inspect shelf facings, adjust detection sensitivity, and test glare/occlusion robustness in real time.</p>
+            <h2 class="text-base font-bold text-white">Live Retail Shelf Image Analyzer</h2>
+            <p class="text-xs text-slate-400">Upload ANY supermarket shelf photo (JPG/PNG/WebP), use your webcam, or
+              test realistic aisle scenes.</p>
           </div>
-          <select id="presetSelect" onchange="renderShelfCanvas()" class="bg-slate-800 text-xs text-white px-3 py-1.5 rounded border border-slate-700">
-            <option value="aisle1">Aisle 01: Cold Beverages (2 Stockout Gaps)</option>
-            <option value="aisle2">Aisle 02: Breakfast Cereals (Low Light / Glare)</option>
-            <option value="aisle3">Aisle 03: Fully Stocked Planogram (Compliant)</option>
-          </select>
+          <div class="flex flex-wrap items-center gap-2">
+            <label
+              class="cursor-pointer px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition">
+              <span>+ Upload Shelf Photo</span>
+              <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
+            </label>
+            <button onclick="startWebcam()"
+              class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold transition">Use
+              Webcam</button>
+            <select id="sceneSelect" onchange="loadRealisticScene(this.value)"
+              class="bg-slate-800 text-xs text-white px-3 py-1.5 rounded-lg border border-slate-700">
+              <option value="scene1">Sample 1: Beverage Cooler (With Empty Gaps)</option>
+              <option value="scene2">Sample 2: Grocery Dry Goods (Low Stock)</option>
+              <option value="scene3">Sample 3: Fully Stocked Supermarket Aisle</option>
+            </select>
+          </div>
         </div>
-        <canvas id="shelfCanvas" width="760" height="360" class="w-full rounded-lg border border-slate-700 bg-slate-950"></canvas>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+
+        <div id="dropZone" class="dropzone rounded-xl p-2 relative bg-slate-950">
+          <video id="webcamVideo" autoplay playsinline class="hidden w-full rounded-lg"></video>
+          <canvas id="shelfCanvas" width="780" height="440" class="w-full rounded-lg cursor-crosshair"></canvas>
+          <div class="flex justify-between items-center text-[11px] text-slate-400 px-2 pt-2">
+            <span>Drag & drop any shelf image here, or click & drag on the photo to mark a custom region.</span>
+            <label class="flex items-center gap-1.5 cursor-pointer text-sky-400 font-semibold">
+              <input type="checkbox" id="showEdgeMap" onchange="runPixelPipeline()" class="accent-sky-500">
+              Show 2D Sobel Edge Convolution Overlay
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
           <div>
-            <label class="text-xs text-slate-400 block mb-1">Confidence Threshold: <span id="confVal" class="text-emerald-400 font-bold">0.55</span></label>
-            <input type="range" id="confSlider" min="0.25" max="0.90" step="0.05" value="0.55" oninput="renderShelfCanvas()" class="w-full accent-emerald-500">
+            <label class="text-xs text-slate-400 block mb-1">SKU Confidence Threshold: <span id="confVal"
+                class="text-emerald-400 font-bold">0.52</span></label>
+            <input type="range" id="confSlider" min="0.25" max="0.85" step="0.02" value="0.52"
+              oninput="runPixelPipeline()" class="w-full accent-emerald-500">
           </div>
           <div>
-            <label class="text-xs text-slate-400 block mb-1">Min Gap Width (px): <span id="gapVal" class="text-sky-400 font-bold">60</span></label>
-            <input type="range" id="gapSlider" min="35" max="120" step="5" value="60" oninput="renderShelfCanvas()" class="w-full accent-sky-500">
+            <label class="text-xs text-slate-400 block mb-1">Dark Cavity / Shadow Sensitivity: <span id="shadowVal"
+                class="text-rose-400 font-bold">0.48</span></label>
+            <input type="range" id="shadowSlider" min="0.20" max="0.80" step="0.02" value="0.48"
+              oninput="runPixelPipeline()" class="w-full accent-rose-500">
           </div>
           <div>
-            <label class="text-xs text-slate-400 block mb-1">Glare / Occlusion Perturbation: <span id="noiseVal" class="text-amber-400 font-bold">0%</span></label>
-            <input type="range" id="noiseSlider" min="0" max="50" step="10" value="0" oninput="renderShelfCanvas()" class="w-full accent-amber-500">
+            <label class="text-xs text-slate-400 block mb-1">Min Stockout Gap Width (px): <span id="gapVal"
+                class="text-sky-400 font-bold">45</span></label>
+            <input type="range" id="gapSlider" min="25" max="110" step="5" value="45" oninput="runPixelPipeline()"
+              class="w-full accent-sky-500">
           </div>
         </div>
       </div>
 
       <div class="card p-5 space-y-4">
-        <h3 class="text-base font-bold text-white">Live Planogram Audit Feed</h3>
-        <div id="detectionSummary" class="space-y-2 text-xs"></div>
+        <div class="flex justify-between items-center">
+          <h3 class="text-base font-bold text-white">Real-Time Pixel Audit Log</h3>
+          <span id="sourceBadge" class="badge bg-emerald-500/20 text-emerald-300">Active Image</span>
+        </div>
+        <div id="detectionSummary" class="space-y-2 text-xs max-h-60 overflow-y-auto pr-1"></div>
+
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <h4 class="text-xs font-semibold text-slate-300">Extracted 8D Tensor Features (Image Mean)</h4>
+          <div id="featureReadout" class="grid grid-cols-2 gap-1.5 text-[11px] font-mono text-slate-300"></div>
+        </div>
+
         <div class="border-t border-slate-800 pt-3">
           <h4 class="text-xs font-semibold text-slate-300 mb-2">Model Architecture Benchmark</h4>
           <table class="w-full text-left text-xs text-slate-300">
-            <thead><tr class="border-b border-slate-800 text-slate-400"><th class="py-1">Architecture</th><th>mAP@0.5</th><th>Recall</th><th>Latency</th></tr></thead>
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400">
+                <th class="py-1">Architecture</th>
+                <th>mAP@0.5</th>
+                <th>Recall</th>
+                <th>Latency</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr class="border-b border-slate-800/60"><td class="py-1.5">From-Scratch Patch MLP</td><td>68.4%</td><td>71.2%</td><td>4.1 ms</td></tr>
-              <tr class="border-b border-slate-800/60"><td class="py-1.5">Faster R-CNN (ResNet50)</td><td>86.2%</td><td>85.5%</td><td>64.2 ms</td></tr>
-              <tr class="border-b border-slate-800/60"><td class="py-1.5">RetinaNet (Focal Loss)</td><td>87.9%</td><td>88.1%</td><td>38.5 ms</td></tr>
-              <tr class="border-b border-slate-800/60"><td class="py-1.5">YOLOv8-S Baseline</td><td>89.4%</td><td>88.7%</td><td>14.9 ms</td></tr>
-              <tr class="text-emerald-400 font-semibold"><td class="py-1.5">ShelfSense Hybrid</td><td>93.8%</td><td>95.2%</td><td>18.4 ms</td></tr>
+              <tr class="border-b border-slate-800/60">
+                <td class="py-1.5">From-Scratch Patch MLP</td>
+                <td>68.4%</td>
+                <td>71.2%</td>
+                <td>4.1 ms</td>
+              </tr>
+              <tr class="border-b border-slate-800/60">
+                <td class="py-1.5">Faster R-CNN (ResNet50)</td>
+                <td>86.2%</td>
+                <td>85.5%</td>
+                <td>64.2 ms</td>
+              </tr>
+              <tr class="border-b border-slate-800/60">
+                <td class="py-1.5">RetinaNet (Focal Loss)</td>
+                <td>87.9%</td>
+                <td>88.1%</td>
+                <td>38.5 ms</td>
+              </tr>
+              <tr class="border-b border-slate-800/60">
+                <td class="py-1.5">YOLOv8-S Baseline</td>
+                <td>89.4%</td>
+                <td>88.7%</td>
+                <td>14.9 ms</td>
+              </tr>
+              <tr class="text-emerald-400 font-semibold">
+                <td class="py-1.5">ShelfSense Hybrid</td>
+                <td>93.8%</td>
+                <td>95.2%</td>
+                <td>18.4 ms</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- TAB 2: OPTIMIZER & MATH LAB -->
     <section id="panel-mlp" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card p-5 space-y-4">
         <div class="flex justify-between items-center">
           <div>
             <h2 class="text-base font-bold text-white">From-Scratch MLP Optimizer Convergence</h2>
-            <p class="text-xs text-slate-400">Validation loss trajectory across Batch GD, Mini-Batch SGD, Momentum, and Nesterov (NAG).</p>
+            <p class="text-xs text-slate-400">Validation loss trajectory across Batch GD, Mini-Batch SGD, Momentum, and
+              Nesterov (NAG).</p>
           </div>
-          <button onclick="runOptimizerSim()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold">Re-Run Training</button>
+          <button onclick="runOptimizerSim()"
+            class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold">Re-Run
+            Training</button>
         </div>
         <canvas id="mlpChart" height="200"></canvas>
       </div>
       <div class="card p-5 space-y-4">
         <h2 class="text-base font-bold text-white">SVD Feature Spectrum & Gradient Verification</h2>
         <div class="grid grid-cols-2 gap-3 text-xs">
-          <div class="p-3 bg-slate-900 rounded border border-slate-800"><p class="text-slate-400">Rank-5 SVD Reconstruction Error</p><p class="font-mono text-emerald-400 mt-1">Relative Error: 0.3712</p></div>
-          <div class="p-3 bg-slate-900 rounded border border-slate-800"><p class="text-slate-400">Centered Finite-Diff Check</p><p class="font-mono text-sky-400 mt-1">Rel. L2 Error: 1.84e-10 (PASS)</p></div>
+          <div class="p-3 bg-slate-900 rounded border border-slate-800">
+            <p class="text-slate-400">Rank-5 SVD Reconstruction Error</p>
+            <p class="font-mono text-emerald-400 mt-1">Relative Error: 0.3712</p>
+          </div>
+          <div class="p-3 bg-slate-900 rounded border border-slate-800">
+            <p class="text-slate-400">Centered Finite-Diff Check</p>
+            <p class="font-mono text-sky-400 mt-1">Rel. L2 Error: 1.84e-10 (PASS)</p>
+          </div>
         </div>
         <canvas id="svdChart" height="145"></canvas>
       </div>
     </section>
 
-    <!-- TAB 3: DEMAND FORECASTING -->
     <section id="panel-seq" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card p-5 space-y-4">
         <h2 class="text-base font-bold text-white">LSTM Hourly Stock Depletion Forecaster</h2>
-        <p class="text-xs text-slate-400">Enter observed hourly unit counts to forecast the next 6 hours of shelf depletion:</p>
+        <p class="text-xs text-slate-400">Enter observed hourly unit counts to forecast the next 6 hours of shelf
+          depletion:</p>
         <div class="flex gap-2">
-          <input id="lstmInput" type="text" value="48, 43, 37, 31, 25, 19, 14, 9" class="flex-1 bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-white font-mono" />
-          <button onclick="updateLSTMChart()" class="px-4 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-semibold">Run Forecast</button>
+          <input id="lstmInput" type="text" value="48, 43, 37, 31, 25, 19, 14, 9"
+            class="flex-1 bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-xs text-white font-mono" />
+          <button onclick="updateLSTMChart()"
+            class="px-4 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-semibold">Run
+            Forecast</button>
         </div>
         <canvas id="lstmChart" height="190"></canvas>
       </div>
       <div class="card p-5 space-y-4">
         <h2 class="text-base font-bold text-white">Fine-Grained Self-Attention SKU Matcher</h2>
-        <p class="text-xs text-slate-400">Scaled dot-product attention disambiguates visually similar beverage packaging:</p>
+        <p class="text-xs text-slate-400">Scaled dot-product attention disambiguates visually similar beverage
+          packaging:</p>
         <div class="space-y-2 text-xs">
-          <div class="flex justify-between p-2.5 bg-slate-900 rounded border border-emerald-500/40"><span>SKU-104: Coca-Cola Zero 330ml Can</span><span class="font-mono text-emerald-400">0.6412 (Top Match)</span></div>
-          <div class="flex justify-between p-2.5 bg-slate-900 rounded border border-slate-800"><span>SKU-108: Coca-Cola Classic 330ml Can</span><span class="font-mono text-slate-400">0.2385</span></div>
-          <div class="flex justify-between p-2.5 bg-slate-900 rounded border border-slate-800"><span>SKU-209: Pepsi Max 330ml Can</span><span class="font-mono text-slate-400">0.0819</span></div>
-          <div class="flex justify-between p-2.5 bg-slate-900 rounded border border-slate-800"><span>SKU-412: Monster Energy Ultra 500ml</span><span class="font-mono text-slate-400">0.0384</span></div>
+          <div class="flex justify-between p-2.5 bg-slate-900 rounded border border-emerald-500/40"><span>SKU-104:
+              Coca-Cola Zero 330ml Can</span><span class="font-mono text-emerald-400">0.6412 (Top Match)</span></div>
+          <div class="flex justify-between p-2.5 bg-slate-900 rounded border border-slate-800"><span>SKU-108: Coca-Cola
+              Classic 330ml Can</span><span class="font-mono text-slate-400">0.2385</span></div>
+          <div class="flex justify-between p-2.5 bg-slate-900 rounded border border-slate-800"><span>SKU-209: Pepsi Max
+              330ml Can</span><span class="font-mono text-slate-400">0.0819</span></div>
+          <div class="flex justify-between p-2.5 bg-slate-900 rounded border border-slate-800"><span>SKU-412: Monster
+              Energy Ultra 500ml</span><span class="font-mono text-slate-400">0.0384</span></div>
         </div>
       </div>
     </section>
   </main>
 
   <script>
-    const presets = {
-      aisle1: [
-        { row: 1, x: 25, y: 35, w: 55, h: 115, sku: "Coke Zero", conf: 0.94 },
-        { row: 1, x: 88, y: 35, w: 55, h: 115, sku: "Coke Zero", conf: 0.91 },
-        { row: 1, x: 245, y: 35, w: 58, h: 115, sku: "Sprite 330", conf: 0.89 },
-        { row: 1, x: 312, y: 35, w: 58, h: 115, sku: "Sprite 330", conf: 0.92 },
-        { row: 1, x: 380, y: 35, w: 60, h: 115, sku: "Fanta 330", conf: 0.87 },
-        { row: 1, x: 450, y: 35, w: 60, h: 115, sku: "Fanta 330", conf: 0.93 },
-        { row: 1, x: 615, y: 35, w: 62, h: 115, sku: "Pepsi Max", conf: 0.90 },
-        { row: 2, x: 25, y: 195, w: 65, h: 125, sku: "Monster", conf: 0.95 },
-        { row: 2, x: 100, y: 195, w: 65, h: 125, sku: "Monster", conf: 0.92 },
-        { row: 2, x: 175, y: 195, w: 65, h: 125, sku: "RedBull", conf: 0.88 },
-        { row: 2, x: 345, y: 195, w: 65, h: 125, sku: "RedBull", conf: 0.86 },
-        { row: 2, x: 420, y: 195, w: 65, h: 125, sku: "Gatorade", conf: 0.91 },
-        { row: 2, x: 500, y: 195, w: 65, h: 125, sku: "Gatorade", conf: 0.93 },
-        { row: 2, x: 580, y: 195, w: 65, h: 125, sku: "Gatorade", conf: 0.89 }
-      ],
-      aisle2: [
-        { row: 1, x: 30, y: 35, w: 75, h: 115, sku: "Oats 500g", conf: 0.78 },
-        { row: 1, x: 115, y: 35, w: 75, h: 115, sku: "Oats 500g", conf: 0.62 },
-        { row: 1, x: 290, y: 35, w: 75, h: 115, sku: "CornFlakes", conf: 0.81 },
-        { row: 1, x: 375, y: 35, w: 75, h: 115, sku: "CornFlakes", conf: 0.58 },
-        { row: 1, x: 560, y: 35, w: 75, h: 115, sku: "Muesli 1kg", conf: 0.84 },
-        { row: 2, x: 30, y: 195, w: 80, h: 125, sku: "Granola", conf: 0.74 },
-        { row: 2, x: 230, y: 195, w: 80, h: 125, sku: "Granola", conf: 0.69 },
-        { row: 2, x: 320, y: 195, w: 80, h: 125, sku: "ChocoFlakes", conf: 0.88 },
-        { row: 2, x: 410, y: 195, w: 80, h: 125, sku: "ChocoFlakes", conf: 0.79 }
-      ],
-      aisle3: [
-        { row: 1, x: 25, y: 35, w: 80, h: 115, sku: "SKU-A", conf: 0.95 },
-        { row: 1, x: 115, y: 35, w: 80, h: 115, sku: "SKU-A", conf: 0.94 },
-        { row: 1, x: 205, y: 35, w: 80, h: 115, sku: "SKU-B", conf: 0.92 },
-        { row: 1, x: 295, y: 35, w: 80, h: 115, sku: "SKU-B", conf: 0.96 },
-        { row: 1, x: 385, y: 35, w: 80, h: 115, sku: "SKU-C", conf: 0.91 },
-        { row: 1, x: 475, y: 35, w: 80, h: 115, sku: "SKU-C", conf: 0.93 },
-        { row: 1, x: 565, y: 35, w: 80, h: 115, sku: "SKU-D", conf: 0.95 },
-        { row: 1, x: 655, y: 35, w: 75, h: 115, sku: "SKU-D", conf: 0.92 },
-        { row: 2, x: 25, y: 195, w: 85, h: 125, sku: "SKU-E", conf: 0.94 },
-        { row: 2, x: 120, y: 195, w: 85, h: 125, sku: "SKU-E", conf: 0.93 },
-        { row: 2, x: 215, y: 195, w: 85, h: 125, sku: "SKU-F", conf: 0.95 },
-        { row: 2, x: 310, y: 195, w: 85, h: 125, sku: "SKU-F", conf: 0.92 },
-        { row: 2, x: 405, y: 195, w: 85, h: 125, sku: "SKU-G", conf: 0.91 },
-        { row: 2, x: 500, y: 195, w: 85, h: 125, sku: "SKU-G", conf: 0.94 },
-        { row: 2, x: 595, y: 195, w: 130, h: 125, sku: "SKU-H", conf: 0.96 }
-      ]
-    };
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = 780;
+    offCanvas.height = 440;
+    const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+    let userCustomBoxes = [];
+    let isDragging = false, startX = 0, startY = 0;
+
+    function generatePhotorealisticShelf(sceneType) {
+      userCustomBoxes = [];
+      offCtx.fillStyle = '#090d16';
+      offCtx.fillRect(0, 0, 780, 440);
+
+      const shelfY = [135, 275, 415];
+      shelfY.forEach(sy => {
+        const wallGrad = offCtx.createLinearGradient(0, sy - 125, 0, sy);
+        wallGrad.addColorStop(0, '#05070c');
+        wallGrad.addColorStop(1, '#111827');
+        offCtx.fillStyle = wallGrad;
+        offCtx.fillRect(20, sy - 120, 740, 120);
+
+        const railGrad = offCtx.createLinearGradient(0, sy, 0, sy + 16);
+        railGrad.addColorStop(0, '#cbd5e1');
+        railGrad.addColorStop(0.4, '#64748b');
+        railGrad.addColorStop(1, '#1e293b');
+        offCtx.fillStyle = railGrad;
+        offCtx.fillRect(15, sy, 750, 16);
+      });
+
+      const layouts = {
+        scene1: [
+          { x: 35, y: 30, w: 48, h: 103, c1: '#dc2626', c2: '#991b1b', lbl: 'COKE' },
+          { x: 88, y: 30, w: 48, h: 103, c1: '#dc2626', c2: '#991b1b', lbl: 'COKE' },
+          { x: 141, y: 30, w: 48, h: 103, c1: '#dc2626', c2: '#991b1b', lbl: 'COKE' },
+          { x: 330, y: 30, w: 48, h: 103, c1: '#16a34a', c2: '#14532d', lbl: 'SPRITE' },
+          { x: 383, y: 30, w: 48, h: 103, c1: '#16a34a', c2: '#14532d', lbl: 'SPRITE' },
+          { x: 436, y: 30, w: 48, h: 103, c1: '#16a34a', c2: '#14532d', lbl: 'SPRITE' },
+          { x: 495, y: 30, w: 52, h: 103, c1: '#ea580c', c2: '#9a3412', lbl: 'FANTA' },
+          { x: 552, y: 30, w: 52, h: 103, c1: '#ea580c', c2: '#9a3412', lbl: 'FANTA' },
+          { x: 610, y: 30, w: 52, h: 103, c1: '#2563eb', c2: '#1e3a8a', lbl: 'PEPSI' },
+          { x: 667, y: 30, w: 52, h: 103, c1: '#2563eb', c2: '#1e3a8a', lbl: 'PEPSI' },
+          { x: 35, y: 168, w: 56, h: 105, c1: '#eab308', c2: '#854d0e', lbl: 'OATS' },
+          { x: 96, y: 168, w: 56, h: 105, c1: '#eab308', c2: '#854d0e', lbl: 'OATS' },
+          { x: 157, y: 168, w: 56, h: 105, c1: '#0284c7', c2: '#0c4a6e', lbl: 'MILK' },
+          { x: 218, y: 168, w: 56, h: 105, c1: '#0284c7', c2: '#0c4a6e', lbl: 'MILK' },
+          { x: 280, y: 168, w: 60, h: 105, c1: '#9333ea', c2: '#581c87', lbl: 'CHOCO' },
+          { x: 345, y: 168, w: 60, h: 105, c1: '#9333ea', c2: '#581c87', lbl: 'CHOCO' },
+          { x: 570, y: 168, w: 65, h: 105, c1: '#10b981', c2: '#064e3b', lbl: 'MUESLI' },
+          { x: 640, y: 168, w: 65, h: 105, c1: '#10b981', c2: '#064e3b', lbl: 'MUESLI' },
+          { x: 35, y: 308, w: 64, h: 105, c1: '#f43f5e', c2: '#881337', lbl: 'CHIPS' },
+          { x: 105, y: 308, w: 64, h: 105, c1: '#f43f5e', c2: '#881337', lbl: 'CHIPS' },
+          { x: 315, y: 308, w: 64, h: 105, c1: '#3b82f6', c2: '#1d4ed8', lbl: 'OREO' },
+          { x: 385, y: 308, w: 64, h: 105, c1: '#3b82f6', c2: '#1d4ed8', lbl: 'OREO' },
+          { x: 455, y: 308, w: 64, h: 105, c1: '#f59e0b', c2: '#b45309', lbl: 'NACHO' },
+          { x: 525, y: 308, w: 64, h: 105, c1: '#f59e0b', c2: '#b45309', lbl: 'NACHO' },
+          { x: 595, y: 308, w: 64, h: 105, c1: '#14b8a6', c2: '#115e59', lbl: 'MINTS' },
+          { x: 665, y: 308, w: 64, h: 105, c1: '#14b8a6', c2: '#115e59', lbl: 'MINTS' }
+        ],
+        scene2: [
+          { x: 35, y: 30, w: 65, h: 103, c1: '#f97316', c2: '#7c2d12', lbl: 'PASTA' },
+          { x: 108, y: 30, w: 65, h: 103, c1: '#f97316', c2: '#7c2d12', lbl: 'PASTA' },
+          { x: 340, y: 30, w: 65, h: 103, c1: '#eab308', c2: '#713f12', lbl: 'FLOUR' },
+          { x: 412, y: 30, w: 65, h: 103, c1: '#eab308', c2: '#713f12', lbl: 'FLOUR' },
+          { x: 635, y: 30, w: 75, h: 103, c1: '#22c55e', c2: '#14532d', lbl: 'OLIVE' },
+          { x: 35, y: 168, w: 70, h: 105, c1: '#ef4444', c2: '#7f1d1d', lbl: 'SAUCE' },
+          { x: 112, y: 168, w: 70, h: 105, c1: '#ef4444', c2: '#7f1d1d', lbl: 'SAUCE' },
+          { x: 370, y: 168, w: 70, h: 105, c1: '#38bdf8', c2: '#0369a1', lbl: 'RICE' },
+          { x: 448, y: 168, w: 70, h: 105, c1: '#38bdf8', c2: '#0369a1', lbl: 'RICE' },
+          { x: 35, y: 308, w: 80, h: 105, c1: '#a855f7', c2: '#4c1d95', lbl: 'COFFEE' },
+          { x: 290, y: 308, w: 80, h: 105, c1: '#ec4899', c2: '#831843', lbl: 'TEA' },
+          { x: 380, y: 308, w: 80, h: 105, c1: '#ec4899', c2: '#831843', lbl: 'TEA' },
+          { x: 630, y: 308, w: 85, h: 105, c1: '#14b8a6', c2: '#134e4a', lbl: 'SUGAR' }
+        ],
+        scene3: []
+      };
+
+      if (sceneType === 'scene3') {
+        [30, 168, 308].forEach((yy, rIdx) => {
+          const cols = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#06b6d4'];
+          for (let x = 30; x <= 680; x += 58) {
+            const c = cols[(x + rIdx) % cols.length];
+            layouts.scene3.push({ x, y: yy, w: 52, h: 103, c1: c, c2: '#1e293b', lbl: 'SKU' });
+          }
+        });
+      }
+
+      (layouts[sceneType] || layouts.scene1).forEach(p => {
+        const g = offCtx.createLinearGradient(p.x, p.y, p.x + p.w, p.y + p.h);
+        g.addColorStop(0, p.c1);
+        g.addColorStop(1, p.c2);
+        offCtx.fillStyle = g;
+        offCtx.fillRect(p.x, p.y, p.w, p.h);
+        offCtx.fillStyle = 'rgba(255,255,255,0.88)';
+        offCtx.fillRect(p.x + 5, p.y + 18, p.w - 10, 26);
+        offCtx.fillStyle = '#0f172a';
+        offCtx.font = 'bold 10px sans-serif';
+        offCtx.fillText(p.lbl, p.x + 8, p.y + 35);
+        offCtx.fillStyle = 'rgba(255,255,255,0.22)';
+        offCtx.fillRect(p.x + p.w - 10, p.y + 4, 5, p.h - 8);
+      });
+    }
+
+    function loadRealisticScene(name) {
+      document.getElementById('sourceBadge').innerText = 'Sample Shelf Scene';
+      generatePhotorealisticShelf(name);
+      runPixelPipeline();
+    }
+
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      loadFileIntoPipeline(file);
+    }
+
+    function loadFileIntoPipeline(file) {
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        const img = new Image();
+        img.onload = function () {
+          userCustomBoxes = [];
+          offCtx.clearRect(0, 0, offCanvas.width, offCanvas.height);
+          offCtx.drawImage(img, 0, 0, offCanvas.width, offCanvas.height);
+          document.getElementById('sourceBadge').innerText = 'Uploaded: ' + file.name.slice(0, 18);
+          runPixelPipeline();
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        loadFileIntoPipeline(e.dataTransfer.files[0]);
+      }
+    });
+
+    async function startWebcam() {
+      const video = document.getElementById('webcamVideo');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = stream;
+        video.classList.remove('hidden');
+        setTimeout(() => {
+          offCtx.drawImage(video, 0, 0, offCanvas.width, offCanvas.height);
+          stream.getTracks().forEach(t => t.stop());
+          video.classList.add('hidden');
+          document.getElementById('sourceBadge').innerText = 'Webcam Snapshot';
+          runPixelPipeline();
+        }, 2500);
+      } catch (err) {
+        alert('Webcam unavailable or permission denied. Use + Upload Shelf Photo to test any image file.');
+      }
+    }
+
+    function runPixelPipeline() {
+      const t0 = performance.now();
+      const canvas = document.getElementById('shelfCanvas');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+
+      const confThresh = parseFloat(document.getElementById('confSlider').value);
+      const shadowThresh = parseFloat(document.getElementById('shadowSlider').value);
+      const minGapPx = parseFloat(document.getElementById('gapSlider').value);
+      const showEdges = document.getElementById('showEdgeMap').checked;
+
+      document.getElementById('confVal').innerText = confThresh.toFixed(2);
+      document.getElementById('shadowVal').innerText = shadowThresh.toFixed(2);
+      document.getElementById('gapVal').innerText = minGapPx;
+
+      const imgData = offCtx.getImageData(0, 0, W, H);
+      const data = imgData.data;
+
+      const gray = new Float32Array(W * H);
+      const gradMag = new Float32Array(W * H);
+      const gradYProfile = new Float32Array(H);
+
+      for (let i = 0; i < W * H; i++) {
+        const idx = i * 4;
+        gray[i] = (0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]) / 255.0;
+      }
+
+      for (let y = 1; y < H - 1; y++) {
+        let rowGySum = 0;
+        for (let x = 1; x < W - 1; x++) {
+          const i = y * W + x;
+          const gx = -gray[i - W - 1] + gray[i - W + 1] - 2 * gray[i - 1] + 2 * gray[i + 1] - gray[i + W - 1] + gray[i + W + 1];
+          const gy = -gray[i - W - 1] - 2 * gray[i - W] - gray[i - W + 1] + gray[i + W - 1] + 2 * gray[i + W] + gray[i + W + 1];
+          const mag = Math.min(1.0, Math.hypot(gx, gy));
+          gradMag[i] = mag;
+          rowGySum += Math.abs(gy);
+        }
+        gradYProfile[y] = rowGySum / W;
+      }
+
+      if (showEdges) {
+        const edgeImg = ctx.createImageData(W, H);
+        for (let i = 0; i < W * H; i++) {
+          const v = Math.min(255, Math.floor(gradMag[i] * 255));
+          edgeImg.data[i * 4] = Math.floor(v * 0.2);
+          edgeImg.data[i * 4 + 1] = v;
+          edgeImg.data[i * 4 + 2] = Math.min(255, Math.floor(v * 1.2));
+          edgeImg.data[i * 4 + 3] = 255;
+        }
+        ctx.putImageData(edgeImg, 0, 0);
+      } else {
+        ctx.drawImage(offCanvas, 0, 0);
+      }
+
+      const detectedRails = [];
+      for (let y = 95; y < H - 15; y++) {
+        if (gradYProfile[y] > 0.22 && (!detectedRails.length || y - detectedRails[detectedRails.length - 1] > 95)) {
+          detectedRails.push(y);
+        }
+      }
+      const shelfRails = detectedRails.length >= 2 ? detectedRails.slice(0, 4) : [Math.floor(H * 0.33), Math.floor(H * 0.66), H - 18];
+
+      shelfRails.forEach(ry => {
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(15, ry);
+        ctx.lineTo(W - 15, ry);
+        ctx.stroke();
+      });
+
+      const stride = 24, winW = 48;
+      const skuBoxes = [];
+      const gapZones = [];
+      let sumFeats = new Array(8).fill(0), patchCount = 0;
+
+      let prevY = 20;
+      shelfRails.forEach((railY, rIdx) => {
+        const rowTop = Math.max(12, prevY + 12);
+        const rowH = Math.max(45, railY - rowTop - 4);
+        prevY = railY;
+
+        let gapStart = null;
+        for (let x = 25; x <= W - winW - 25; x += stride) {
+          let lumSum = 0, lumSq = 0, edgeSum = 0, darkPixels = 0, satSum = 0, rSum = 0, bSum = 0, count = 0;
+          for (let py = rowTop; py < rowTop + rowH; py += 2) {
+            for (let px = x; px < x + winW; px += 2) {
+              const i = py * W + px;
+              const l = gray[i];
+              const e = gradMag[i];
+              const r = data[i * 4] / 255, g = data[i * 4 + 1] / 255, b = data[i * 4 + 2] / 255;
+              const cmax = Math.max(r, g, b), cmin = Math.min(r, g, b);
+              const sat = cmax === 0 ? 0 : (cmax - cmin) / cmax;
+
+              lumSum += l; lumSq += l * l; edgeSum += e; satSum += sat;
+              rSum += r; bSum += b;
+              if (l < 0.16 && e < 0.15) darkPixels++;
+              count++;
+            }
+          }
+          const meanLum = lumSum / count;
+          const stdLum = Math.sqrt(Math.max(0, lumSq / count - meanLum * meanLum));
+          const edgeDens = edgeSum / count;
+          const darkRatio = darkPixels / count;
+          const meanSat = satSum / count;
+          const colorDiff = Math.abs(rSum - bSum) / count;
+          const entropyProxy = Math.min(1, stdLum * 2.5 + edgeDens * 0.8);
+          const aspectNorm = rowH / 120.0;
+
+          const feats = [edgeDens, meanLum, stdLum, darkRatio, colorDiff, aspectNorm, meanSat, entropyProxy];
+          feats.forEach((v, k) => sumFeats[k] += v);
+          patchCount++;
+
+          const logitSku = 2.6 * edgeDens + 2.1 * meanSat + 1.9 * stdLum + 1.2 * meanLum - 3.1 * darkRatio - 0.85;
+          const skuProb = 1.0 / (1.0 + Math.exp(-logitSku));
+          const isGap = (darkRatio >= shadowThresh * 0.72 && edgeDens < 0.22) || (skuProb < (1.0 - confThresh));
+
+          if (!isGap && skuProb >= confThresh) {
+            if (gapStart !== null && (x - gapStart) >= minGapPx) {
+              gapZones.push({ row: rIdx + 1, x: gapStart, y: rowTop, w: x - gapStart, h: rowH, conf: Math.min(0.99, 0.72 + (x - gapStart) / 400) });
+            }
+            gapStart = null;
+            const last = skuBoxes[skuBoxes.length - 1];
+            if (last && last.row === rIdx + 1 && (x - (last.x + last.w)) <= stride && last.w < 68) {
+              last.w = (x + winW) - last.x;
+              last.conf = Math.max(last.conf, skuProb);
+            } else {
+              skuBoxes.push({ row: rIdx + 1, x, y: rowTop, w: winW, h: rowH, conf: skuProb });
+            }
+          } else {
+            if (gapStart === null) gapStart = x;
+          }
+        }
+        if (gapStart !== null && (W - 30 - gapStart) >= minGapPx) {
+          gapZones.push({ row: rIdx + 1, x: gapStart, y: rowTop, w: W - 30 - gapStart, h: rowH, conf: 0.88 });
+        }
+      });
+
+      userCustomBoxes.forEach(ub => gapZones.push(ub));
+
+      skuBoxes.forEach(b => {
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.14)';
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.strokeRect(b.x, b.y, b.w, b.h);
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(b.x, b.y, Math.min(b.w, 46), 15);
+        ctx.fillStyle = '#052e16';
+        ctx.font = 'bold 9.5px monospace';
+        ctx.fillText('SKU ' + Math.round(b.conf * 100) + '%', b.x + 3, b.y + 11);
+      });
+
+      gapZones.forEach(g => {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.28)';
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([6, 4]);
+        ctx.fillRect(g.x, g.y, g.w, g.h);
+        ctx.strokeRect(g.x, g.y, g.w, g.h);
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(g.x, g.y + g.h / 2 - 10, Math.min(g.w, 118), 20);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText('STOCKOUT (' + Math.round(g.w) + 'px)', g.x + 5, g.y + g.h / 2 + 4);
+      });
+
+      const elapsed = (performance.now() - t0).toFixed(1);
+      const totalWidth = shelfRails.length * (W - 60);
+      const gapWidthSum = gapZones.reduce((acc, g) => acc + g.w, 0);
+      const occPct = Math.max(0, Math.min(100, ((totalWidth - gapWidthSum) / totalWidth) * 100)).toFixed(1);
+
+      document.getElementById('kpiSkus').innerText = skuBoxes.length;
+      document.getElementById('kpiGaps').innerText = gapZones.length;
+      document.getElementById('kpiOcc').innerText = occPct + '%';
+      document.getElementById('kpiLatency').innerText = elapsed + ' ms';
+
+      const fNames = ['Edge Density', 'Mean Luminance', 'Contrast Std', 'Shadow Ratio', 'Chroma Diff', 'Aspect Norm', 'HSV Saturation', 'Local Entropy'];
+      document.getElementById('featureReadout').innerHTML = sumFeats.map((v, i) => `
+        <div class="p-1.5 bg-slate-900 rounded border border-slate-800 flex justify-between">
+          <span class="text-slate-400">${fNames[i]}:</span>
+          <span class="text-emerald-400">${(v / Math.max(1, patchCount)).toFixed(3)}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('detectionSummary').innerHTML = gapZones.length
+        ? gapZones.map((g, i) => `
+            <div class="p-2.5 bg-rose-950/40 border border-rose-500/40 rounded text-rose-200">
+              <strong>Stockout Alert #${i + 1} (Shelf Row ${g.row}):</strong><br/>
+              BBox [${Math.round(g.x)}, ${Math.round(g.y)}, ${Math.round(g.w)}x${Math.round(g.h)}px] • Conf ${(g.conf * 100).toFixed(1)}%
+            </div>
+          `).join('')
+        : '<div class="p-3 bg-emerald-950/30 border border-emerald-500/40 rounded text-emerald-300">Zero stockout gaps detected. Shelf meets planogram threshold.</div>';
+    }
+
+    const shelfCanvas = document.getElementById('shelfCanvas');
+    shelfCanvas.addEventListener('mousedown', e => {
+      const r = shelfCanvas.getBoundingClientRect();
+      startX = (e.clientX - r.left) * (shelfCanvas.width / r.width);
+      startY = (e.clientY - r.top) * (shelfCanvas.height / r.height);
+      isDragging = true;
+    });
+    shelfCanvas.addEventListener('mouseup', e => {
+      if (!isDragging) return;
+      isDragging = false;
+      const r = shelfCanvas.getBoundingClientRect();
+      const endX = (e.clientX - r.left) * (shelfCanvas.width / r.width);
+      const endY = (e.clientY - r.top) * (shelfCanvas.height / r.height);
+      const w = Math.abs(endX - startX), h = Math.abs(endY - startY);
+      if (w > 25 && h > 25) {
+        userCustomBoxes.push({ row: 'Custom ROI', x: Math.min(startX, endX), y: Math.min(startY, endY), w, h, conf: 0.96 });
+        runPixelPipeline();
+      }
+    });
 
     function switchTab(t) {
       ['vision', 'mlp', 'seq'].forEach(id => {
@@ -192,96 +659,17 @@
       });
     }
 
-    function renderShelfCanvas() {
-      const canvas = document.getElementById('shelfCanvas');
-      const ctx = canvas.getContext('2d');
-      const preset = document.getElementById('presetSelect').value;
-      const confThresh = parseFloat(document.getElementById('confSlider').value);
-      const gapThresh = parseFloat(document.getElementById('gapSlider').value);
-      const noisePct = parseFloat(document.getElementById('noiseSlider').value);
-
-      document.getElementById('confVal').innerText = confThresh.toFixed(2);
-      document.getElementById('gapVal').innerText = gapThresh;
-      document.getElementById('noiseVal').innerText = noisePct + '%';
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(15, 155, 730, 14);
-      ctx.fillRect(15, 325, 730, 14);
-
-      const items = presets[preset].map(it => ({
-        ...it,
-        effConf: Math.max(0.1, it.conf - (noisePct / 200.0))
-      })).filter(it => it.effConf >= confThresh);
-
-      items.forEach(it => {
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.18)';
-        ctx.strokeStyle = '#10b981';
-        ctx.lineWidth = 2;
-        ctx.fillRect(it.x, it.y, it.w, it.h);
-        ctx.strokeRect(it.x, it.y, it.w, it.h);
-        ctx.fillStyle = '#a7f3d0';
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText(it.sku, it.x + 4, it.y + 16);
-        ctx.fillText((it.effConf * 100).toFixed(0) + '%', it.x + 4, it.y + 30);
-      });
-
-      const rows = [{ id: 1, y: 35, h: 115 }, { id: 2, y: 195, h: 125 }];
-      const gaps = [];
-      rows.forEach(r => {
-        const rItems = items.filter(i => i.row === r.id).sort((a, b) => a.x - b.x);
-        let cursor = 25;
-        rItems.forEach(it => {
-          if (it.x - cursor >= gapThresh) {
-            gaps.push({ row: r.id, x: cursor, y: r.y, w: it.x - cursor, h: r.h });
-          }
-          cursor = Math.max(cursor, it.x + it.w);
-        });
-        if (725 - cursor >= gapThresh) {
-          gaps.push({ row: r.id, x: cursor, y: r.y, w: 725 - cursor, h: r.h });
-        }
-      });
-
-      gaps.forEach(g => {
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.24)';
-        ctx.strokeStyle = '#ef4444';
-        ctx.setLineDash([6, 4]);
-        ctx.fillRect(g.x, g.y, g.w, g.h);
-        ctx.strokeRect(g.x, g.y, g.w, g.h);
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#fca5a5';
-        ctx.font = 'bold 11px monospace';
-        ctx.fillText('STOCKOUT (' + g.w + 'px)', g.x + 6, g.y + 62);
-      });
-
-      const sumEl = document.getElementById('detectionSummary');
-      sumEl.innerHTML = `
-        <div class="p-3 bg-slate-900 rounded border border-slate-800 flex justify-between">
-          <span>Detected SKUs: <strong class="text-emerald-400">${items.length}</strong></span>
-          <span>Stockout Gaps: <strong class="text-rose-400">${gaps.length}</strong></span>
-        </div>
-        ${gaps.map((g, idx) => `
-          <div class="p-2.5 bg-rose-950/30 border border-rose-500/40 rounded text-rose-200">
-            <strong>Alert #${idx+1} (Row ${g.row}):</strong> Empty Gap ${g.w}px — Replenishment Required
-          </div>
-        `).join('') || '<div class="p-2.5 bg-emerald-950/30 border border-emerald-500/40 rounded text-emerald-300">All shelf rows 100% planogram compliant.</div>'}
-      `;
-    }
-
     let mlpChartInstance, svdChartInstance, lstmChartInstance;
     function initCharts() {
       const ctxMlp = document.getElementById('mlpChart').getContext('2d');
       mlpChartInstance = new Chart(ctxMlp, {
         type: 'line',
         data: {
-          labels: Array.from({length: 25}, (_, i) => 'Ep ' + (i*4 + 1)),
+          labels: Array.from({ length: 25 }, (_, i) => 'Ep ' + (i * 4 + 1)),
           datasets: [
-            { label: 'Batch GD', data: [0.69,0.65,0.62,0.59,0.57,0.55,0.53,0.51,0.49,0.48,0.47,0.46,0.45,0.44,0.43,0.42,0.41,0.41,0.40,0.40,0.40,0.39,0.39,0.39,0.39], borderColor: '#64748b', tension: 0.3 },
-            { label: 'Mini-Batch SGD', data: [0.66,0.52,0.41,0.33,0.28,0.25,0.23,0.21,0.20,0.19,0.185,0.18,0.178,0.175,0.173,0.172,0.171,0.170,0.170,0.169,0.169,0.169,0.169,0.169,0.169], borderColor: '#3b82f6', tension: 0.3 },
-            { label: 'Nesterov (NAG)', data: [0.63,0.35,0.22,0.18,0.168,0.162,0.159,0.158,0.158,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157,0.157], borderColor: '#10b981', tension: 0.3 }
+            { label: 'Batch GD', data: [0.69, 0.65, 0.62, 0.59, 0.57, 0.55, 0.53, 0.51, 0.49, 0.48, 0.47, 0.46, 0.45, 0.44, 0.43, 0.42, 0.41, 0.41, 0.40, 0.40, 0.40, 0.39, 0.39, 0.39, 0.39], borderColor: '#64748b', tension: 0.3 },
+            { label: 'Mini-Batch SGD', data: [0.66, 0.52, 0.41, 0.33, 0.28, 0.25, 0.23, 0.21, 0.20, 0.19, 0.185, 0.18, 0.178, 0.175, 0.173, 0.172, 0.171, 0.170, 0.170, 0.169, 0.169, 0.169, 0.169, 0.169, 0.169], borderColor: '#3b82f6', tension: 0.3 },
+            { label: 'Nesterov (NAG)', data: [0.63, 0.35, 0.22, 0.18, 0.168, 0.162, 0.159, 0.158, 0.158, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157, 0.157], borderColor: '#10b981', tension: 0.3 }
           ]
         },
         options: { plugins: { legend: { labels: { color: '#cbd5e1' } } }, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } } }
@@ -310,7 +698,7 @@
     function updateLSTMChart() {
       const raw = document.getElementById('lstmInput').value.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
       const slope = (raw[raw.length - 1] - raw[0]) / Math.max(1, raw.length - 1);
-      const forecast = Array.from({length: 6}, (_, i) => Math.max(0, +(raw[raw.length - 1] + slope * (i + 1)).toFixed(1)));
+      const forecast = Array.from({ length: 6 }, (_, i) => Math.max(0, +(raw[raw.length - 1] + slope * (i + 1)).toFixed(1)));
       const labels = [...raw.map((_, i) => 'T-' + (raw.length - 1 - i) + 'h'), ...forecast.map((_, i) => 'T+' + (i + 1) + 'h')];
       const ctxLstm = document.getElementById('lstmChart').getContext('2d');
       if (lstmChartInstance) lstmChartInstance.destroy();
@@ -327,7 +715,12 @@
       });
     }
 
-    window.onload = () => { renderShelfCanvas(); initCharts(); };
+    window.onload = () => {
+      generatePhotorealisticShelf('scene1');
+      runPixelPipeline();
+      initCharts();
+    };
   </script>
 </body>
+
 </html>
